@@ -4,6 +4,12 @@
     <Filter Include="Main">
       <UniqueIdentifier>{e1517d75-8dba-4d54-9184-b05414d4b18f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Network">
+      <UniqueIdentifier>{c55b90ae-c7f8-4348-baaf-276bef35823e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server">
+      <UniqueIdentifier>{1acf1f7e-91c3-4159-8c89-10b0a7d5f151}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -12,6 +18,21 @@
     <ClCompile Include="main.cpp">
       <Filter>Main</Filter>
     </ClCompile>
+    <ClCompile Include="SocketUtil.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="RingBuffer.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="NetworkAddress.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Server.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="Packet.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -19,6 +40,24 @@
     </ClInclude>
     <ClInclude Include="Types.h">
       <Filter>Main</Filter>
+    </ClInclude>
+    <ClInclude Include="SocketUtil.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="RingBuffer.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="NetworkAddress.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Protocol.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="Server.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="Packet.h">
+      <Filter>Server</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

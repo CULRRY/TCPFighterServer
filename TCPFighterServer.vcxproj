@@ -20,6 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="NetworkAddress.cpp" />
+    <ClCompile Include="Packet.cpp" />
+    <ClCompile Include="RingBuffer.cpp" />
+    <ClCompile Include="Server.cpp" />
+    <ClCompile Include="SocketUtil.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -28,6 +33,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NetworkAddress.h" />
+    <ClInclude Include="Packet.h" />
+    <ClInclude Include="Protocol.h" />
+    <ClInclude Include="RingBuffer.h" />
+    <ClInclude Include="Server.h" />
+    <ClInclude Include="SocketUtil.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Types.h" />
   </ItemGroup>
