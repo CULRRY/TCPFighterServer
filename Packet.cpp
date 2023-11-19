@@ -2,10 +2,30 @@
 #include "Server.h"
 #include "Packet.h"
 
+bool IsAlowableRange(Session* session, int32 x, int32 y)
+{
+	if (abs(session->x - x) > 50)
+	{
+		return false;
+	}
+
+	if (abs(session->y - y) > 50)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
 {
 	session->isMove = true;
 	session->moveDir = pkt->dir;
+
+	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
+	{
+		Server::Disconnect(session);
+	}
 
 	switch (pkt->dir)
 	{
@@ -47,6 +67,11 @@ bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
 
 bool Handle_C_MOVE_STOP(Session* session, const protocol::C_MOVE_STOP* pkt)
 {
+	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
+	{
+		Server::Disconnect(session);
+	}
+
 	session->isMove = false;
 	session->attackDir = pkt->dir;
 	session->x = pkt->x;
@@ -71,6 +96,12 @@ bool Handle_C_MOVE_STOP(Session* session, const protocol::C_MOVE_STOP* pkt)
 
 bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 {
+	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
+	{
+		Server::Disconnect(session);
+	}
+
+
 	if (session->attackType == AttackType::NONE)
 	{
 		//session->attackType = AttackType::ATTACK1;
@@ -126,6 +157,10 @@ bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 
 bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 {
+	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
+	{
+		Server::Disconnect(session);
+	}
 
 	if (session->attackType == AttackType::NONE)
 	{
@@ -182,6 +217,11 @@ bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 
 bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 {
+	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
+	{
+		Server::Disconnect(session);
+	}
+
 	if (session->attackType == AttackType::NONE)
 	{
 		//session->attackType = AttackType::ATTACK3;

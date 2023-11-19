@@ -13,6 +13,7 @@ int main()
 	{
 		Server::Network();
 		Server::Update();
+
 		Sleep(20 - overTime);
 		idealTime += 20;
 		overTime = timeGetTime() - idealTime;

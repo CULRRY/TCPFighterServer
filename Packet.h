@@ -10,6 +10,8 @@ struct PacketHeader
 };
 
 
+bool IsAlowableRange(Session* session, int32 x, int32 y);
+
 bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt);
 bool Handle_C_MOVE_STOP(Session* session, const protocol::C_MOVE_STOP* pkt);
 bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt);
