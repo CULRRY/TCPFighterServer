@@ -73,7 +73,7 @@ bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 {
 	if (session->attackType == AttackType::NONE)
 	{
-		session->attackType = AttackType::ATTACK1;
+		//session->attackType = AttackType::ATTACK1;
 		session->moveDir = pkt->dir;
 		session->x = pkt->x;
 		session->y = pkt->y;
@@ -91,6 +91,34 @@ bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 			reinterpret_cast<BYTE*>(&sendPkt),
 			sizeof(protocol::S_ATTACK1)
 		);
+
+		for (Session* target : Server::sessions)
+		{
+			if (target->socket == INVALID_SOCKET)
+			{
+				continue;
+			}
+
+			if (session == target)
+			{
+				continue;
+			}
+
+			bool isAttack = false;
+			int32 damage = 5;
+
+			if (Server::IsAttackRange(session, target, Server::ATTACK1_RANGE_X, Server::ATTACK1_RANGE_Y))
+			{
+				target->hp -= damage;
+				protocol::S_DAMAGE pkt{
+					session->id,
+						target->id,
+						target->hp
+				};
+
+				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+			}
+		}
 	}
 
 	return true;
@@ -101,7 +129,7 @@ bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 
 	if (session->attackType == AttackType::NONE)
 	{
-		session->attackType = AttackType::ATTACK2;
+		//session->attackType = AttackType::ATTACK2;
 		session->moveDir = pkt->dir;
 		session->x = pkt->x;
 		session->y = pkt->y;
@@ -119,6 +147,34 @@ bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 			reinterpret_cast<BYTE*>(&sendPkt),
 			sizeof(protocol::S_ATTACK2)
 		);
+
+		for (Session* target : Server::sessions)
+		{
+			if (target->socket == INVALID_SOCKET)
+			{
+				continue;
+			}
+
+			if (session == target)
+			{
+				continue;
+			}
+
+			bool isAttack = false;
+			int32 damage = 10;
+
+			if (Server::IsAttackRange(session, target, Server::ATTACK2_RANGE_X, Server::ATTACK2_RANGE_Y))
+			{
+				target->hp -= damage;
+				protocol::S_DAMAGE pkt{
+					session->id,
+						target->id,
+						target->hp
+				};
+
+				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+			}
+		}
 	}
 
 	return true;
@@ -128,7 +184,7 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 {
 	if (session->attackType == AttackType::NONE)
 	{
-		session->attackType = AttackType::ATTACK3;
+		//session->attackType = AttackType::ATTACK3;
 		session->moveDir = pkt->dir;
 		session->x = pkt->x;
 		session->y = pkt->y;
@@ -146,6 +202,34 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 			reinterpret_cast<BYTE*>(&sendPkt),
 			sizeof(protocol::S_ATTACK3)
 		);
+
+		for (Session* target : Server::sessions)
+		{
+			if (target->socket == INVALID_SOCKET)
+			{
+				continue;
+			}
+
+			if (session == target)
+			{
+				continue;
+			}
+
+			bool isAttack = false;
+			int32 damage = 15;
+
+			if (Server::IsAttackRange(session, target, Server::ATTACK3_RANGE_X, Server::ATTACK3_RANGE_Y))
+			{
+				target->hp -= damage;
+				protocol::S_DAMAGE pkt{
+					session->id,
+						target->id,
+						target->hp
+				};
+
+				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+			}
+		}
 	}
 
 	return true;

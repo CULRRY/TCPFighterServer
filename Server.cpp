@@ -12,6 +12,7 @@ void Server::Init()
 {
 	SocketUtil::Init();
 	srand(time(nullptr));
+
 	listenSocket = SocketUtil::Create();
 
 	int32 bindRet = SocketUtil::Bind(listenSocket, NetworkAddress(INADDR_ANY, 5000));
@@ -120,113 +121,12 @@ void Server::Update()
 
 		if (session->isMove == true)
 		{
+			if (session->x < RANGE_MOVE_LEFT || session->x > RANGE_MOVE_RIGHT
+				|| session->y < RANGE_MOVE_BOTTOM || session->y > RANGE_MOVE_TOP)
+				continue;
+
 			session->x += dx[static_cast<int8>(session->moveDir)];
 			session->y += dy[static_cast<int8>(session->moveDir)];
-		}
-
-		if (session->attackType != AttackType::NONE)
-		{
-			for (Session* target : sessions)
-			{
-				if (target->socket == INVALID_SOCKET)
-				{
-					continue;
-				}
-
-				if (session == target)
-				{
-					continue;
-				}
-
-				bool isAttack = false;
-				int32 damage;
-
-
-
-				switch (session->attackType)
-				{
-				case AttackType::ATTACK1:
-					if (target->y < session->y || target->y >= session->y + ATTACK1_RANGE_Y)
-					{
-						break;
-					}
-					if (session->attackDir == Direction::LL)
-					{
-						if (target->x > session->x || target->x <= session->x - ATTACK1_RANGE_X)
-						{
-							break;
-						}
-					}
-					else
-					{
-						if (target->x < session->x || target->x >= session->x + ATTACK1_RANGE_X)
-						{
-							break;
-						}
-					}
-					isAttack = true;
-					damage = 10;
-					break;
-				case AttackType::ATTACK2:
-					if (target->y < session->y || target->y >= session->y + ATTACK2_RANGE_Y)
-					{
-						break;
-					}
-					if (session->attackDir == Direction::LL)
-					{
-						if (target->x > session->x || target->x <= session->x - ATTACK2_RANGE_X)
-						{
-							break;
-						}
-					}
-					else
-					{
-						if (target->x < session->x || target->x >= session->x + ATTACK2_RANGE_X)
-						{
-							break;
-						}
-					}
-					isAttack = true;
-					damage = 20;
-					break;
-				case AttackType::ATTACK3: 
-					if (target->y < session->y || target->y >= session->y + ATTACK3_RANGE_Y)
-					{
-						break;
-					}
-					if (session->attackDir == Direction::LL)
-					{
-						if (target->x > session->x || target->x <= session->x - ATTACK3_RANGE_X)
-						{
-							break;
-						}
-					}
-					else
-					{
-						if (target->x < session->x || target->x >= session->x + ATTACK3_RANGE_X)
-						{
-							break;
-						}
-					}
-					isAttack = true;
-					damage = 25;
-					break;
-				default: ;
-				}
-
-				if (isAttack)
-				{
-					target->hp -= damage;
-					protocol::S_DAMAGE pkt{
-						session->id,
-						target->id,
-						target->hp
-					};
-
-					SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
-				}
-			}
-			session->attackType = AttackType::NONE;
 		}
 	}
 }
@@ -247,8 +147,8 @@ bool Server::OnAccept()
 
 	int16 randVal = rand();
 
-	int16 randX = randVal % RANGE_MOVE_RIGHT + RANGE_MOVE_LEFT;
-	int16 randY = randVal % RANGE_MOVE_BOTTOM + RANGE_MOVE_TOP;
+	int16 randX = (randVal % RANGE_MOVE_RIGHT) + RANGE_MOVE_LEFT;
+	int16 randY = (randVal % RANGE_MOVE_BOTTOM) + RANGE_MOVE_TOP;
 	Direction dir;
 	if (randX < RANGE_MOVE_RIGHT / 2)
 	{
@@ -343,11 +243,10 @@ void Server::OnRecv(Session* session)
 		0
 	);
 
-	session->recvBuffer.MoveRear(recvRet);
-
 	if (recvRet == 0)
 	{
 		Disconnect(session);
+		return;
 	}
 
 	if (recvRet == SOCKET_ERROR)
@@ -355,8 +254,11 @@ void Server::OnRecv(Session* session)
 		if (WSAGetLastError() != WSAEWOULDBLOCK)
 		{
 			Disconnect(session);
+			return;
 		}
 	}
+
+	session->recvBuffer.MoveRear(recvRet);
 
 	while (true)
 	{
@@ -423,6 +325,8 @@ void Server::OnRecv(Session* session)
 
 		default:;
 		}
+
+		cout << "Recv " << (int32)header.size << " Type: " << (int)header.type << endl;
 	}
 }
 
@@ -464,6 +368,33 @@ void Server::Disconnect(Session* session)
 	SocketUtil::Close(session->socket);
 	session->socket = INVALID_SOCKET;
 
+	cout << "Disconnect" << endl;
+
 	protocol::S_DELETE_CHARACTER pkt{session->id};
 	SendBroadcast(session, PacketType::S_DELETE_CHARACTER, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DELETE_CHARACTER));
+}
+
+bool Server::IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY)
+{
+	if (target->y < session->y || target->y >= session->y + rangeY)
+	{
+		return false;
+	}
+
+	if (session->attackDir == Direction::LL)
+	{
+		if (target->x > session->x || target->x <= session->x - rangeX)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		if (target->x < session->x || target->x >= session->x + rangeX)
+		{
+			return false;
+		}
+	}
+
+	return true;
 }

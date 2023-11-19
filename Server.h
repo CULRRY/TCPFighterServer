@@ -32,13 +32,16 @@ struct Session
 
 class Server
 {
+public:
 	static constexpr int32 MAX_USER				= 63;
 	static constexpr int32 MAX_WIDTH			= 640;
 	static constexpr int32 MAX_HEIGHT			= 480;
+
 	static constexpr int32 RANGE_MOVE_TOP		= 50;
 	static constexpr int32 RANGE_MOVE_LEFT		= 10;
 	static constexpr int32 RANGE_MOVE_RIGHT		= 630;
 	static constexpr int32 RANGE_MOVE_BOTTOM	= 470;
+
 	static constexpr int32 ATTACK1_RANGE_X		= 80;
 	static constexpr int32 ATTACK2_RANGE_X		= 90;
 	static constexpr int32 ATTACK3_RANGE_X		= 100;
@@ -56,6 +59,7 @@ public:
 	static void SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len);
 	static void SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, uint8 len);
 	static void Disconnect(Session* session);
+	static bool IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY);
 
 
 	inline static list<Session*>	sessions;

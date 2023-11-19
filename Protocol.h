@@ -53,7 +53,7 @@ namespace protocol
 	//	1	-	HP
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
+#pragma pack(1)
 	struct S_CREATE_MY_CHARACTER
 	{
 		int32		id;
@@ -78,7 +78,6 @@ namespace protocol
 	//	1	-	HP
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_CREATE_OTHER_CHARACTER
 	{
 		int32		id;
@@ -97,7 +96,6 @@ namespace protocol
 	///	4	-	ID
 	///
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_DELETE_CHARACTER
 	{
 		int32 id;
@@ -117,7 +115,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct C_MOVE_START
 	{
 		Direction	dir;
@@ -140,7 +137,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_MOVE_START
 	{
 		int32 id;
@@ -160,7 +156,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct C_MOVE_STOP
 	{
 		Direction	dir;
@@ -180,7 +175,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_MOVE_STOP
 	{
 		int32		id;
@@ -202,7 +196,6 @@ namespace protocol
 	//	2	-	Y	
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct C_ATTACK1
 	{
 		Direction	dir;
@@ -222,7 +215,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_ATTACK1
 	{
 		int32		id;
@@ -244,7 +236,6 @@ namespace protocol
 	//	2	-	Y	
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct C_ATTACK2
 	{
 		Direction	dir;
@@ -264,7 +255,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_ATTACK2
 	{
 		int32		id;
@@ -286,7 +276,6 @@ namespace protocol
 	//	2	-	Y	
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct C_ATTACK3
 	{
 		Direction	dir;
@@ -306,7 +295,6 @@ namespace protocol
 	//	2	-	Y
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_ATTACK3
 	{
 		int32		id;
@@ -325,11 +313,11 @@ namespace protocol
 	//	1	-	DamageHP	( ÇÇÇØÀÚ HP )
 	//
 	//---------------------------------------------------------------
-#pragma pack(push, 1)
 	struct S_DAMAGE
 	{
 		int32	attackId;
 		int32	damageId;
 		int8	damageHp;
 	};
+#pragma pack()
 }
