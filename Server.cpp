@@ -185,7 +185,7 @@ bool Server::OnAccept()
 		AttackType::NONE
 	};
 
-	wcout << "[Connect] " << newSession->netInfo.GetPort() << endl;
+	wcout << L"[Connect] " << newSession->netInfo.GetIpAddress() << L":" << newSession->netInfo.GetPort() << endl;
 
 	sessions.push_back(newSession);
 
