@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "NetworkAddress.h"
 
+
 NetworkAddress::NetworkAddress(SOCKADDR_IN sockAddr) : _sockAddr(sockAddr)
 {
 }

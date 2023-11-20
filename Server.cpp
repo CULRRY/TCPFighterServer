@@ -121,12 +121,16 @@ void Server::Update()
 
 		if (session->isMove == true)
 		{
-			if (session->x < RANGE_MOVE_LEFT || session->x > RANGE_MOVE_RIGHT
-				|| session->y < RANGE_MOVE_BOTTOM || session->y > RANGE_MOVE_TOP)
+			int16 nx = session->x + dx[static_cast<int8>(session->moveDir)];
+			int16 ny = session->y + dy[static_cast<int8>(session->moveDir)];
+
+			if (nx < RANGE_MOVE_LEFT || nx > RANGE_MOVE_RIGHT
+				|| ny < RANGE_MOVE_TOP || ny > RANGE_MOVE_BOTTOM)
 				continue;
 
-			session->x += dx[static_cast<int8>(session->moveDir)];
-			session->y += dy[static_cast<int8>(session->moveDir)];
+			session->x = nx;
+			session->y = ny;
+			//cout << session->x << " " << session->y << endl;
 		}
 	}
 }
@@ -145,10 +149,17 @@ bool Server::OnAccept()
 
 	SocketUtil::SetLinger(clientSocket, 1, 0);
 
+
+
 	int16 randVal = rand();
 
-	int16 randX = (randVal % RANGE_MOVE_RIGHT) + RANGE_MOVE_LEFT;
-	int16 randY = (randVal % RANGE_MOVE_BOTTOM) + RANGE_MOVE_TOP;
+	int16 randX = randVal % RANGE_MOVE_RIGHT;
+	int16 randY = randVal % RANGE_MOVE_BOTTOM;
+
+	if (randX < RANGE_MOVE_LEFT)
+		randX += RANGE_MOVE_LEFT;
+	if (randY < RANGE_MOVE_TOP)
+		randY += RANGE_MOVE_TOP;
 	Direction dir;
 	if (randX < RANGE_MOVE_RIGHT / 2)
 	{
@@ -173,6 +184,8 @@ bool Server::OnAccept()
 		false,
 		AttackType::NONE
 	};
+
+	wcout << "[Connect] " << newSession->netInfo.GetPort() << endl;
 
 	sessions.push_back(newSession);
 
@@ -253,6 +266,7 @@ void Server::OnRecv(Session* session)
 	{
 		if (WSAGetLastError() != WSAEWOULDBLOCK)
 		{
+			cout << WSAGetLastError() << endl;
 			Disconnect(session);
 			return;
 		}
@@ -326,7 +340,7 @@ void Server::OnRecv(Session* session)
 		default:;
 		}
 
-		cout << "Recv " << (int32)header.size << " Type: " << (int)header.type << endl;
+		//cout << "Recv " << (int32)header.size << " Type: " << (int)header.type << endl;
 	}
 }
 
