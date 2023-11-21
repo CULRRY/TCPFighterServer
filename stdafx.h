@@ -14,3 +14,7 @@ using namespace std;
 #include <ws2tcpip.h>
 
 #include "Types.h"
+
+
+#define PROFILE
+#include "Profiler.h"

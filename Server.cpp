@@ -60,21 +60,19 @@ void Server::Network()
 
 	if (FD_ISSET(listenSocket, &rset))
 	{
-		for (int i = 0; i < 5; i++)
-		{
-			if (OnAccept() == false)
-				break;
-			
-		}
+		PROFILE_BEGIN(L"Acc");
+		OnAccept();
+		PROFILE_END(L"Acc");
+		PROFILE_DATA_OUT(L"asdf.txt");
 	}
 
+	
 	for (Session* session : sessions)
 	{
 		if (session->socket == INVALID_SOCKET)
 		{
 			continue;
 		}
-
 		if (FD_ISSET(session->socket, &rset))
 		{
 			OnRecv(session);
@@ -90,7 +88,9 @@ void Server::Network()
 
 		if (FD_ISSET(session->socket, &wset))
 		{
+			PROFILE_BEGIN(L"send");
 			OnSend(session);
+			PROFILE_END(L"send");
 		}
 	}
 
@@ -154,8 +154,6 @@ bool Server::OnAccept()
 
 	SocketUtil::SetLinger(clientSocket, 1, 0);
 
-
-
 	int16 randVal = rand();
 
 	int16 randX = randVal % RANGE_MOVE_RIGHT;
@@ -209,15 +207,17 @@ bool Server::OnAccept()
 		sizeof(protocol::S_CREATE_MY_CHARACTER)
 	);
 
-	wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, attackDir={}, x={}, y={}, hp={:d}\n", 
-		::format(L"{}:{}", newSession->netInfo.GetIpAddress(), newSession->netInfo.GetPort()),
-		L"S_CREATE_MY_CHARACTER",
-		pktCreateMyCharacter.id,
-		(int32)pktCreateMyCharacter.dir,
-		pktCreateMyCharacter.x,
-		pktCreateMyCharacter.y,
-		pktCreateMyCharacter.hp
-	);
+
+	//wprintf(L"[Send] -> [%s:%d] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d", 
+	//	newSession->netInfo.GetIpAddress().c_str(), 
+	//	newSession->netInfo.GetPort(), 
+	//	L"S_CREATE_MY_CHARACTER",
+	//	pktCreateMyCharacter.id,
+	//	(int32)pktCreateMyCharacter.dir,
+	//	pktCreateMyCharacter.x,
+	//	pktCreateMyCharacter.y,
+	//	pktCreateMyCharacter.hp
+	//);
 
 	protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
 		newSession->id,
@@ -234,14 +234,17 @@ bool Server::OnAccept()
 		sizeof(protocol::S_CREATE_OTHER_CHARACTER)
 	);
 
-	wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, attackDir={}, x={}, y={}, hp={:d}\n",
-		L"Broadcast",
-		L"S_CREATE_OTHER_CHARACTER",
-		pktCreateOtherCharacter.id,
-		(int32)pktCreateOtherCharacter.dir,
-		pktCreateOtherCharacter.x,
-		pktCreateOtherCharacter.y,
-		pktCreateOtherCharacter.hp);
+	//wprintf(L"[Send] -> [%s] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d",
+	//	L"Broadcast",
+	//	L"S_CREATE_OTHER_CHARACTER",
+	//	pktCreateOtherCharacter.id,
+	//	(int32)pktCreateOtherCharacter.dir,
+	//	pktCreateOtherCharacter.x,
+	//	pktCreateOtherCharacter.y,
+	//	pktCreateOtherCharacter.hp
+	//);
+
+
 
 	// 다른 플레이어 정보 받기
 	for (Session* session : sessions)
@@ -265,14 +268,16 @@ bool Server::OnAccept()
 			sizeof(protocol::S_CREATE_OTHER_CHARACTER)
 		);
 
-		wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, attackDir={}, x={}, y={}, hp={:d}\n",
-			::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			L"S_CREATE_OTHER_CHARACTER",
-			pktCreateMyCharacter.id,
-			(int32)pktCreateMyCharacter.dir,
-			pktCreateMyCharacter.x,
-			pktCreateMyCharacter.y,
-			pktCreateMyCharacter.hp);
+		//wprintf(L"[Send] -> [%s:%d] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d",
+		//	newSession->netInfo.GetIpAddress().c_str(),
+		//	newSession->netInfo.GetPort(),
+		//	L"S_CREATE_OTHER_CHARACTER",
+		//	pktCreateMyCharacter.id,
+		//	(int32)pktCreateMyCharacter.dir,
+		//	pktCreateMyCharacter.x,
+		//	pktCreateMyCharacter.y,
+		//	pktCreateMyCharacter.hp
+		//);
 	}
 
 	return true;
@@ -335,13 +340,14 @@ void Server::OnRecv(Session* session)
 			protocol::C_MOVE_START pkt;
 			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_MOVE_START));
 
-			wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-				::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-				L"C_MOVE_START",
-				session->id,
-				(int32)pkt.dir,
-				pkt.x,
-				pkt.y);
+
+			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
+			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
+			//	L"C_MOVE_START",
+			//	session->id,
+			//	(int32)pkt.dir,
+			//	pkt.x,
+			//	pkt.y);
 
 			Handle_C_MOVE_START(session, &pkt);
 			break;
@@ -351,13 +357,15 @@ void Server::OnRecv(Session* session)
 			protocol::C_MOVE_STOP pkt;
 			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_MOVE_STOP));
 
-			wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-				::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-				L"C_MOVE_STOP",
-				session->id,
-				(int32)pkt.dir,
-				pkt.x,
-				pkt.y);
+
+			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
+			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
+			//	L"C_MOVE_STOP",
+			//	session->id,
+			//	(int32)pkt.dir,
+			//	pkt.x,
+			//	pkt.y);
+
 
 			Handle_C_MOVE_STOP(session, &pkt);
 			break;
@@ -368,13 +376,13 @@ void Server::OnRecv(Session* session)
 			protocol::C_ATTACK1 pkt;
 			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK1));
 
-			wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-				::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-				L"C_ATTACK1",
-				session->id,
-				(int32)pkt.dir,
-				pkt.x,
-				pkt.y);
+			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
+			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
+			//	L"C_ATTACK1",
+			//	session->id,
+			//	(int32)pkt.dir,
+			//	pkt.x,
+			//	pkt.y);
 
 			Handle_C_ATTACK1(session, &pkt);
 			break;
@@ -385,13 +393,13 @@ void Server::OnRecv(Session* session)
 			protocol::C_ATTACK2 pkt;
 			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK2));
 
-			wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-				::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-				L"C_ATTACK2",
-				session->id,
-				(int32)pkt.dir,
-				pkt.x,
-				pkt.y);
+			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
+			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
+			//	L"C_ATTACK2",
+			//	session->id,
+			//	(int32)pkt.dir,
+			//	pkt.x,
+			//	pkt.y);
 
 			Handle_C_ATTACK2(session, &pkt);
 			break;
@@ -402,13 +410,13 @@ void Server::OnRecv(Session* session)
 			protocol::C_ATTACK3 pkt;
 			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK3));
 
-			wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-				::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-				L"C_ATTACK3",
-				session->id,
-				(int32)pkt.dir,
-				pkt.x,
-				pkt.y);
+			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
+			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
+			//	L"C_ATTACK3",
+			//	session->id,
+			//	(int32)pkt.dir,
+			//	pkt.x,
+			//	pkt.y);
 
 			Handle_C_ATTACK3(session, &pkt);
 			break;
