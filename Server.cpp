@@ -60,10 +60,7 @@ void Server::Network()
 
 	if (FD_ISSET(listenSocket, &rset))
 	{
-		PROFILE_BEGIN(L"Acc");
 		OnAccept();
-		PROFILE_END(L"Acc");
-		PROFILE_DATA_OUT(L"asdf.txt");
 	}
 
 	
@@ -188,7 +185,7 @@ bool Server::OnAccept()
 		AttackType::NONE
 	};
 
-	wcout << ::format(L"[Conn] {}:{}\n", newSession->netInfo.GetIpAddress(), newSession->netInfo.GetPort());
+	//wcout << ::format(L"[Conn] {}:{}\n", newSession->netInfo.GetIpAddress(), newSession->netInfo.GetPort());
 	sessions.push_back(newSession);
 
 	// 캐릭터 만들기
@@ -497,7 +494,7 @@ void Server::Disconnect(Session* session)
 
 bool Server::IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY)
 {
-	if (target->y < session->y || target->y >= session->y + rangeY)
+	if (target->y < session->y - rangeY || target->y >= session->y + rangeY)
 	{
 		return false;
 	}
