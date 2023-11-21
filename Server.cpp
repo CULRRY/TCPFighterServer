@@ -85,9 +85,7 @@ void Server::Network()
 
 		if (FD_ISSET(session->socket, &wset))
 		{
-			PROFILE_BEGIN(L"send");
 			OnSend(session);
-			PROFILE_END(L"send");
 		}
 	}
 
