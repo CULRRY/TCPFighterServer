@@ -42,7 +42,7 @@ bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
 		break;
 
 	default:
-			break;
+		break;
 	}
 
 	session->x = pkt->x;
@@ -56,8 +56,8 @@ bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
 	};
 
 	Server::SendBroadcast(
-		session, 
-		PacketType::S_MOVE_START, 
+		session,
+		PacketType::S_MOVE_START,
 		reinterpret_cast<BYTE*>(&sendPkt),
 		sizeof(protocol::S_MOVE_START)
 	);
@@ -294,7 +294,8 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 			sendPkt.id,
 			(int32)sendPkt.dir,
 			sendPkt.x,
-			sendPkt.y);
+			sendPkt.y
+		);
 
 		for (Session* target : Server::sessions)
 		{
@@ -326,7 +327,8 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 					L"S_DAMAGE",
 					pkt.attackId,
 					pkt.damageId,
-					(int32)pkt.damageHp);
+					(int32)pkt.damageHp
+				);
 			}
 		}
 	}

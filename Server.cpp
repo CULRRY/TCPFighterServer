@@ -60,7 +60,12 @@ void Server::Network()
 
 	if (FD_ISSET(listenSocket, &rset))
 	{
-		OnAccept();
+		for (int i = 0; i < 5; i++)
+		{
+			if (OnAccept() == false)
+				break;
+			
+		}
 	}
 
 	for (Session* session : sessions)
@@ -173,8 +178,8 @@ bool Server::OnAccept()
 	Session* newSession = new Session{
 		clientSocket,
 		NetworkAddress(clientAddr),
-		RingBuffer(10000),
-		RingBuffer(10000),
+		RingBuffer(5000),
+		RingBuffer(5000),
 		alignId++,
 		randX,
 		randY,
@@ -211,7 +216,8 @@ bool Server::OnAccept()
 		(int32)pktCreateMyCharacter.dir,
 		pktCreateMyCharacter.x,
 		pktCreateMyCharacter.y,
-		pktCreateMyCharacter.hp);
+		pktCreateMyCharacter.hp
+	);
 
 	protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
 		newSession->id,
@@ -418,11 +424,27 @@ void Server::OnRecv(Session* session)
 void Server::OnSend(Session* session)
 {
 	int32 sendRet = ::send(session->socket, (char*)session->sendBuffer.GetFrontBufferPtr(), session->sendBuffer.DirectDequeueSize(), 0);
+
+	if (sendRet == SOCKET_ERROR)
+	{
+		if (WSAGetLastError() != WSAEWOULDBLOCK)
+		{
+			cout << WSAGetLastError() << endl;
+			Disconnect(session);
+		}
+	}
+
 	session->sendBuffer.MoveFront(sendRet);
 }
 
 void Server::SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len)
 {
+	if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
+	{
+		Disconnect(session);
+		return;
+	}
+
 	PacketHeader header{ 0x89, len, type };
 	session->sendBuffer.Enqueue(reinterpret_cast<BYTE*>(&header), sizeof(PacketHeader));
 	session->sendBuffer.Enqueue(pkt, len);
@@ -442,6 +464,12 @@ void Server::SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, u
 		if (session->socket == INVALID_SOCKET)
 		{
 			continue;
+		}
+
+		if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
+		{
+			Disconnect(session);
+			return;
 		}
 
 		SendUnicast(session, type, pkt, len);
