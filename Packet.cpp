@@ -62,6 +62,14 @@ bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
 		sizeof(protocol::S_MOVE_START)
 	);
 
+	wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
+		L"Broadcast",
+		L"S_MOVE_START",
+		sendPkt.id,
+		(int32)sendPkt.dir,
+		sendPkt.x,
+		sendPkt.y);
+
 	return true;
 }
 
@@ -90,6 +98,14 @@ bool Handle_C_MOVE_STOP(Session* session, const protocol::C_MOVE_STOP* pkt)
 		reinterpret_cast<BYTE*>(&sendPkt),
 		sizeof(protocol::S_MOVE_STOP)
 	);
+
+	wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
+		L"Broadcast",
+		L"S_MOVE_STOP",
+		sendPkt.id,
+		(int32)sendPkt.dir,
+		sendPkt.x,
+		sendPkt.y);
 
 	return true;
 }
@@ -123,6 +139,14 @@ bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 			sizeof(protocol::S_ATTACK1)
 		);
 
+		wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
+			L"Broadcast",
+			L"S_ATTACK1",
+			sendPkt.id,
+			(int32)sendPkt.dir,
+			sendPkt.x,
+			sendPkt.y);
+
 		for (Session* target : Server::sessions)
 		{
 			if (target->socket == INVALID_SOCKET)
@@ -148,6 +172,13 @@ bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
 				};
 
 				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+
+				wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
+					L"Broadcast",
+					L"S_DAMAGE",
+					pkt.attackId,
+					pkt.damageId,
+					(int32)pkt.damageHp);
 			}
 		}
 	}
@@ -183,6 +214,14 @@ bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 			sizeof(protocol::S_ATTACK2)
 		);
 
+		wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
+			L"Broadcast",
+			L"S_ATTACK2",
+			sendPkt.id,
+			(int32)sendPkt.dir,
+			sendPkt.x,
+			sendPkt.y);
+
 		for (Session* target : Server::sessions)
 		{
 			if (target->socket == INVALID_SOCKET)
@@ -208,6 +247,12 @@ bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
 				};
 
 				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+				wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
+					L"Broadcast",
+					L"S_DAMAGE",
+					pkt.attackId,
+					pkt.damageId,
+					(int32)pkt.damageHp);
 			}
 		}
 	}
@@ -243,6 +288,14 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 			sizeof(protocol::S_ATTACK3)
 		);
 
+		wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
+			L"Broadcast",
+			L"S_ATTACK3",
+			sendPkt.id,
+			(int32)sendPkt.dir,
+			sendPkt.x,
+			sendPkt.y);
+
 		for (Session* target : Server::sessions)
 		{
 			if (target->socket == INVALID_SOCKET)
@@ -268,6 +321,12 @@ bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
 				};
 
 				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
+				wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
+					L"Broadcast",
+					L"S_DAMAGE",
+					pkt.attackId,
+					pkt.damageId,
+					(int32)pkt.damageHp);
 			}
 		}
 	}
