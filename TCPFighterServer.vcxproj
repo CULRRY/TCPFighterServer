@@ -22,6 +22,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkAddress.cpp" />
     <ClCompile Include="Packet.cpp" />
+    <ClCompile Include="PacketHandle.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="Server.cpp" />
@@ -36,6 +37,7 @@
   <ItemGroup>
     <ClInclude Include="NetworkAddress.h" />
     <ClInclude Include="Packet.h" />
+    <ClInclude Include="PacketHandle.h" />
     <ClInclude Include="Profiler.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RingBuffer.h" />

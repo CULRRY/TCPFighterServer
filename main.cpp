@@ -1,6 +1,6 @@
 #include "stdafx.h"
 #include "Server.h"
-
+#include <conio.h>
 int main()
 {
 	Server::Init();
@@ -11,7 +11,14 @@ int main()
 
 	while (true)
 	{
+		if (GetAsyncKeyState(VK_RSHIFT))
+		{
+			PROFILE_DATA_OUT();
+			wcout << L"PROFILE SAVED\n";
+		}
+
 		Server::Network();
+
 		Server::Update();
 
 		Sleep(20 - overTime);

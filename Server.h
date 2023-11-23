@@ -3,6 +3,7 @@
 #include "NetworkAddress.h"
 #include "RingBuffer.h"
 
+class Packet;
 enum class PacketType : BYTE;
 enum class Direction : BYTE;
 
@@ -56,8 +57,10 @@ public:
 	static bool OnAccept();
 	static void OnRecv(Session* session);
 	static void OnSend(Session* session);
-	static void SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len);
-	static void SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, uint8 len);
+	//static void SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len);
+	static void SendUnicast(Session* session, Packet& pkt);
+	//static void SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, uint8 len);
+	static void SendBroadcast(Session* exceptSession, Packet& pkt);
 	static void Disconnect(Session* session);
 	static bool IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY);
 

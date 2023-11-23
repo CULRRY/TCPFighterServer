@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "Server.h"
 
-#include "Packet.h"
+#include "PacketHandle.h"
 #include "Protocol.h"
 #include "SocketUtil.h"
 
@@ -140,6 +140,7 @@ bool Server::OnAccept()
 	SOCKADDR_IN clientAddr;
 	int32 addrLen = sizeof(clientAddr);
 
+
 	SOCKET clientSocket = ::accept(listenSocket, reinterpret_cast<SOCKADDR*>(&clientAddr), &addrLen);
 
 	if (clientSocket == INVALID_SOCKET)
@@ -148,6 +149,7 @@ bool Server::OnAccept()
 	}
 
 	SocketUtil::SetLinger(clientSocket, 1, 0);
+
 
 	int16 randVal = rand();
 
@@ -185,22 +187,34 @@ bool Server::OnAccept()
 
 	//wcout << ::format(L"[Conn] {}:{}\n", newSession->netInfo.GetIpAddress(), newSession->netInfo.GetPort());
 	sessions.push_back(newSession);
-
 	// 캐릭터 만들기
-	protocol::S_CREATE_MY_CHARACTER pktCreateMyCharacter{
-		newSession->id,
-		newSession->attackDir,
-		newSession->x,
-		newSession->y,
-		newSession->hp
-	};
+	//protocol::S_CREATE_MY_CHARACTER pktCreateMyCharacter{
+	//	newSession->id,
+	//	newSession->attackDir,
+	//	newSession->x,
+	//	newSession->y,
+	//	newSession->hp
+	//};
+	{
+		Packet pkt;
+		Make_S_CREATE_MY_CHARACTER(
+			pkt,
+			newSession->id,
+			newSession->attackDir,
+			newSession->x,
+			newSession->y,
+			newSession->hp
+		);
+		SendUnicast(newSession, pkt);
+		//SendUnicast(
+		//	newSession,
+		//	PacketType::S_CREATE_MY_CHARACTER,
+		//	reinterpret_cast<BYTE*>(&pktCreateMyCharacter),
+		//	sizeof(protocol::S_CREATE_MY_CHARACTER)
+		//);
+		
+	}
 
-	SendUnicast(
-		newSession, 
-		PacketType::S_CREATE_MY_CHARACTER, 
-		reinterpret_cast<BYTE*>(&pktCreateMyCharacter), 
-		sizeof(protocol::S_CREATE_MY_CHARACTER)
-	);
 
 
 	//wprintf(L"[Send] -> [%s:%d] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d", 
@@ -214,20 +228,35 @@ bool Server::OnAccept()
 	//	pktCreateMyCharacter.hp
 	//);
 
-	protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
-		newSession->id,
-		newSession->attackDir,
-		newSession->x,
-		newSession->y,
-		newSession->hp
-	};
+	{
+		Packet pkt;
+		Make_S_CREATE_OTHER_CHARACTER(
+			pkt,
+			newSession->id,
+			newSession->attackDir,
+			newSession->x,
+			newSession->y,
+			newSession->hp
+		);
+	//	protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
+	//newSession->id,
+	//newSession->attackDir,
+	//newSession->x,
+	//newSession->y,
+	//newSession->hp
+	//	};
 
-	SendBroadcast(
-		newSession,
-		PacketType::S_CREATE_OTHER_CHARACTER,
-		reinterpret_cast<BYTE*>(&pktCreateOtherCharacter),
-		sizeof(protocol::S_CREATE_OTHER_CHARACTER)
-	);
+		SendBroadcast(newSession, pkt);
+		//SendBroadcast(
+		//	newSession,
+		//	PacketType::S_CREATE_OTHER_CHARACTER,
+		//	reinterpret_cast<BYTE*>(&pktCreateOtherCharacter),
+		//	sizeof(protocol::S_CREATE_OTHER_CHARACTER)
+		//);
+	}
+
+
+
 
 	//wprintf(L"[Send] -> [%s] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d",
 	//	L"Broadcast",
@@ -249,19 +278,30 @@ bool Server::OnAccept()
 			continue;
 		}
 
-		protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
+		//protocol::S_CREATE_OTHER_CHARACTER pktCreateOtherCharacter{
+		//	session->id,
+		//	session->attackDir,
+		//	session->x,
+		//	session->y,
+		//	session->hp
+		//};
+
+		Packet pktCreateOtherCharacter;
+		Make_S_CREATE_OTHER_CHARACTER(
+			pktCreateOtherCharacter,
 			session->id,
 			session->attackDir,
 			session->x,
 			session->y,
 			session->hp
-		};
-		SendUnicast(
-			newSession,
-			PacketType::S_CREATE_OTHER_CHARACTER,
-			reinterpret_cast<BYTE*>(&pktCreateOtherCharacter),
-			sizeof(protocol::S_CREATE_OTHER_CHARACTER)
 		);
+		SendUnicast(newSession, pktCreateOtherCharacter);
+		//SendUnicast(
+		//	newSession,
+		//	PacketType::S_CREATE_OTHER_CHARACTER,
+		//	reinterpret_cast<BYTE*>(&pktCreateOtherCharacter),
+		//	sizeof(protocol::S_CREATE_OTHER_CHARACTER)
+		//);
 
 		//wprintf(L"[Send] -> [%s:%d] %s # id=%d, dir=%d, x=%d, y=%d, hp=%d",
 		//	newSession->netInfo.GetIpAddress().c_str(),
@@ -328,14 +368,14 @@ void Server::OnRecv(Session* session)
 
 		session->recvBuffer.MoveFront(sizeof(PacketHeader));
 
+		Packet pkt(header.size);
+		session->recvBuffer.Dequeue(pkt.GetBufferPtr(), header.size);
+		pkt.MoveWritePos(header.size);
+
 		switch (header.type)
 		{
 		case PacketType::C_MOVE_START:
 		{
-			protocol::C_MOVE_START pkt;
-			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_MOVE_START));
-
-
 			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
 			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
 			//	L"C_MOVE_START",
@@ -343,34 +383,18 @@ void Server::OnRecv(Session* session)
 			//	(int32)pkt.dir,
 			//	pkt.x,
 			//	pkt.y);
-
-			Handle_C_MOVE_START(session, &pkt);
+			Handle_C_MOVE_START(session, pkt);
 			break;
 		}
 		case PacketType::C_MOVE_STOP:
 		{
-			protocol::C_MOVE_STOP pkt;
-			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_MOVE_STOP));
 
-
-			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			//	L"C_MOVE_STOP",
-			//	session->id,
-			//	(int32)pkt.dir,
-			//	pkt.x,
-			//	pkt.y);
-
-
-			Handle_C_MOVE_STOP(session, &pkt);
+			Handle_C_MOVE_STOP(session, pkt);
 			break;
 		}
 
 		case PacketType::C_ATTACK1:
 		{
-			protocol::C_ATTACK1 pkt;
-			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK1));
-
 			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
 			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
 			//	L"C_ATTACK1",
@@ -378,16 +402,12 @@ void Server::OnRecv(Session* session)
 			//	(int32)pkt.dir,
 			//	pkt.x,
 			//	pkt.y);
-
-			Handle_C_ATTACK1(session, &pkt);
+			Handle_C_ATTACK1(session, pkt);
 			break;
 		}
 
 		case PacketType::C_ATTACK2:
 		{
-			protocol::C_ATTACK2 pkt;
-			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK2));
-
 			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
 			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
 			//	L"C_ATTACK2",
@@ -395,16 +415,12 @@ void Server::OnRecv(Session* session)
 			//	(int32)pkt.dir,
 			//	pkt.x,
 			//	pkt.y);
-
-			Handle_C_ATTACK2(session, &pkt);
+			Handle_C_ATTACK2(session, pkt);
 			break;
 		}
 
 		case PacketType::C_ATTACK3:
 		{
-			protocol::C_ATTACK3 pkt;
-			session->recvBuffer.Dequeue(reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::C_ATTACK3));
-
 			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
 			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
 			//	L"C_ATTACK3",
@@ -412,8 +428,7 @@ void Server::OnRecv(Session* session)
 			//	(int32)pkt.dir,
 			//	pkt.x,
 			//	pkt.y);
-
-			Handle_C_ATTACK3(session, &pkt);
+			Handle_C_ATTACK3(session, pkt);
 			break;
 		}
 
@@ -440,20 +455,56 @@ void Server::OnSend(Session* session)
 	session->sendBuffer.MoveFront(sendRet);
 }
 
-void Server::SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len)
+void Server::SendUnicast(Session* session, Packet& pkt)
 {
-	if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
+	if (session->sendBuffer.GetFreeSize() < pkt.GetDataSize())
 	{
 		Disconnect(session);
 		return;
 	}
 
-	PacketHeader header{ 0x89, len, type };
-	session->sendBuffer.Enqueue(reinterpret_cast<BYTE*>(&header), sizeof(PacketHeader));
-	session->sendBuffer.Enqueue(pkt, len);
+	session->sendBuffer.Enqueue(pkt.GetBufferPtr(), pkt.GetDataSize());
 }
+//void Server::SendUnicast(Session* session, PacketType type, BYTE* pkt, uint8 len)
+//{
+//	if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
+//	{
+//		Disconnect(session);
+//		return;
+//	}
+//
+//	PacketHeader header{ 0x89, len, type };
+//	session->sendBuffer.Enqueue(reinterpret_cast<BYTE*>(&header), sizeof(PacketHeader));
+//	session->sendBuffer.Enqueue(pkt, len);
+//}
 
-void Server::SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, uint8 len)
+//void Server::SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, uint8 len)
+//{
+//	int32 sendRet = SOCKET_ERROR;
+//
+//	for (Session* session : sessions)
+//	{
+//		if (session == exceptSession)
+//		{
+//			continue;
+//		}
+//
+//		if (session->socket == INVALID_SOCKET)
+//		{
+//			continue;
+//		}
+//
+//		if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
+//		{
+//			Disconnect(session);
+//			return;
+//		}
+//
+//		SendUnicast(session, type, pkt, len);
+//	}
+//}
+
+void Server::SendBroadcast(Session* exceptSession, Packet& pkt)
 {
 	int32 sendRet = SOCKET_ERROR;
 
@@ -469,13 +520,7 @@ void Server::SendBroadcast(Session* exceptSession, PacketType type, BYTE* pkt, u
 			continue;
 		}
 
-		if (session->sendBuffer.GetFreeSize() < sizeof(PacketHeader) + len)
-		{
-			Disconnect(session);
-			return;
-		}
-
-		SendUnicast(session, type, pkt, len);
+		SendUnicast(session, pkt);
 	}
 }
 
@@ -485,9 +530,9 @@ void Server::Disconnect(Session* session)
 	SocketUtil::Close(session->socket);
 	session->socket = INVALID_SOCKET;
 
-
-	protocol::S_DELETE_CHARACTER pkt{session->id};
-	SendBroadcast(session, PacketType::S_DELETE_CHARACTER, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DELETE_CHARACTER));
+	Packet pkt;
+	Make_S_DELETE_CHARACTER(pkt, session->id);
+	SendBroadcast(session, pkt);
 }
 
 bool Server::IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY)

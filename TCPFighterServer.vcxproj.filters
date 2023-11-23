@@ -30,12 +30,13 @@
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="Packet.cpp">
+    <ClCompile Include="PacketHandle.cpp">
       <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="Profiler.cpp">
       <Filter>Server</Filter>
     </ClCompile>
+    <ClCompile Include="Packet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -59,11 +60,12 @@
     <ClInclude Include="Server.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h">
+    <ClInclude Include="PacketHandle.h">
       <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="Profiler.h">
       <Filter>Server</Filter>
     </ClInclude>
+    <ClInclude Include="Packet.h" />
   </ItemGroup>
 </Project>

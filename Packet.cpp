@@ -1,337 +1,207 @@
 #include "stdafx.h"
-#include "Server.h"
 #include "Packet.h"
 
-bool IsAlowableRange(Session* session, int32 x, int32 y)
+Packet::Packet()
+	: _bufferSize(BUFFER_DEFAULT_SIZE), _dataSize(0), _readPos(0), _writePos(0)
 {
-	if (abs(session->x - x) > 50)
-	{
-		return false;
-	}
-
-	if (abs(session->y - y) > 50)
-	{
-		return false;
-	}
-
-	return true;
+	_buffer = new BYTE[_bufferSize];
 }
 
-bool Handle_C_MOVE_START(Session* session, const protocol::C_MOVE_START* pkt)
+Packet::Packet(int32 bufferSize)
+	:_bufferSize(bufferSize), _dataSize(0), _readPos(0), _writePos(0)
 {
-	session->isMove = true;
-	session->moveDir = pkt->dir;
-
-	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
-	{
-		Server::Disconnect(session);
-	}
-
-	switch (pkt->dir)
-	{
-	case Direction::LL:
-	case Direction::LU:
-	case Direction::LD:
-		session->attackDir = Direction::LL;
-		break;
-
-	case Direction::RR:
-	case Direction::RU:
-	case Direction::RD:
-		session->attackDir = Direction::RR;
-		break;
-
-	default:
-		break;
-	}
-
-	session->x = pkt->x;
-	session->y = pkt->y;
-
-	protocol::S_MOVE_START sendPkt{
-		session->id,
-		pkt->dir,
-		pkt->x,
-		pkt->y
-	};
-
-	Server::SendBroadcast(
-		session,
-		PacketType::S_MOVE_START,
-		reinterpret_cast<BYTE*>(&sendPkt),
-		sizeof(protocol::S_MOVE_START)
-	);
-
-	//wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
-	//	L"Broadcast",
-	//	L"S_MOVE_START",
-	//	sendPkt.id,
-	//	(int32)sendPkt.dir,
-	//	sendPkt.x,
-	//	sendPkt.y);
-
-	return true;
+	_buffer = new BYTE[_bufferSize];
 }
 
-bool Handle_C_MOVE_STOP(Session* session, const protocol::C_MOVE_STOP* pkt)
+Packet::~Packet()
 {
-	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
-	{
-		Server::Disconnect(session);
-	}
-
-	session->isMove = false;
-	session->attackDir = pkt->dir;
-	session->x = pkt->x;
-	session->y = pkt->y;
-
-	protocol::S_MOVE_STOP sendPkt{
-		session->id,
-		pkt->dir,
-		pkt->x,
-		pkt->y
-	};
-
-	Server::SendBroadcast(
-		session,
-		PacketType::S_MOVE_STOP,
-		reinterpret_cast<BYTE*>(&sendPkt),
-		sizeof(protocol::S_MOVE_STOP)
-	);
-
-	//wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
-	//	L"Broadcast",
-	//	L"S_MOVE_STOP",
-	//	sendPkt.id,
-	//	(int32)sendPkt.dir,
-	//	sendPkt.x,
-	//	sendPkt.y);
-
-	return true;
+	delete[] _buffer;
 }
 
-bool Handle_C_ATTACK1(Session* session, const protocol::C_ATTACK1* pkt)
+void Packet::Clear()
 {
-	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
-	{
-		Server::Disconnect(session);
-	}
-
-
-	if (session->attackType == AttackType::NONE)
-	{
-		//session->attackType = AttackType::ATTACK1;
-		session->moveDir = pkt->dir;
-		session->x = pkt->x;
-		session->y = pkt->y;
-
-		protocol::S_ATTACK1 sendPkt{
-			session->id,
-			pkt->dir,
-			pkt->x,
-			pkt->y
-		};
-
-		Server::SendBroadcast(
-			session,
-			PacketType::S_ATTACK1,
-			reinterpret_cast<BYTE*>(&sendPkt),
-			sizeof(protocol::S_ATTACK1)
-		);
-
-		//wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
-		//	L"Broadcast",
-		//	L"S_ATTACK1",
-		//	sendPkt.id,
-		//	(int32)sendPkt.dir,
-		//	sendPkt.x,
-		//	sendPkt.y);
-
-		for (Session* target : Server::sessions)
-		{
-			if (target->socket == INVALID_SOCKET)
-			{
-				continue;
-			}
-
-			if (session == target)
-			{
-				continue;
-			}
-
-			bool isAttack = false;
-			int32 damage = 5;
-
-			if (Server::IsAttackRange(session, target, Server::ATTACK1_RANGE_X, Server::ATTACK1_RANGE_Y))
-			{
-				target->hp -= damage;
-				protocol::S_DAMAGE pkt{
-					session->id,
-						target->id,
-						target->hp
-				};
-
-				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
-
-				//wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
-				//	L"Broadcast",
-				//	L"S_DAMAGE",
-				//	pkt.attackId,
-				//	pkt.damageId,
-				//	(int32)pkt.damageHp);
-			}
-		}
-	}
-
-	return true;
+	_readPos = 0;
+	_writePos = 0;
 }
 
-bool Handle_C_ATTACK2(Session* session, const protocol::C_ATTACK2* pkt)
+int32 Packet::MoveWritePos(int32 size)
 {
-	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
-	{
-		Server::Disconnect(session);
-	}
-
-	if (session->attackType == AttackType::NONE)
-	{
-		//session->attackType = AttackType::ATTACK2;
-		session->moveDir = pkt->dir;
-		session->x = pkt->x;
-		session->y = pkt->y;
-
-		protocol::S_ATTACK2 sendPkt{
-			session->id,
-				pkt->dir,
-				pkt->x,
-				pkt->y
-		};
-
-		Server::SendBroadcast(
-			session,
-			PacketType::S_ATTACK2,
-			reinterpret_cast<BYTE*>(&sendPkt),
-			sizeof(protocol::S_ATTACK2)
-		);
-
-		//wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
-		//	L"Broadcast",
-		//	L"S_ATTACK2",
-		//	sendPkt.id,
-		//	(int32)sendPkt.dir,
-		//	sendPkt.x,
-		//	sendPkt.y);
-
-		for (Session* target : Server::sessions)
-		{
-			if (target->socket == INVALID_SOCKET)
-			{
-				continue;
-			}
-
-			if (session == target)
-			{
-				continue;
-			}
-
-			bool isAttack = false;
-			int32 damage = 10;
-
-			if (Server::IsAttackRange(session, target, Server::ATTACK2_RANGE_X, Server::ATTACK2_RANGE_Y))
-			{
-				target->hp -= damage;
-				protocol::S_DAMAGE pkt{
-					session->id,
-						target->id,
-						target->hp
-				};
-
-				//Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
-				//wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
-				//	L"Broadcast",
-				//	L"S_DAMAGE",
-				//	pkt.attackId,
-				//	pkt.damageId,
-				//	(int32)pkt.damageHp);
-			}
-		}
-	}
-
-	return true;
+	_writePos += size;
+	_dataSize += size;
+	return size;
 }
 
-bool Handle_C_ATTACK3(Session* session, const protocol::C_ATTACK3* pkt)
+int32 Packet::MoveReadPos(int32 size)
 {
-	if (IsAlowableRange(session, pkt->x, pkt->y) == false)
-	{
-		Server::Disconnect(session);
-	}
+	_readPos += size;
+	_dataSize -= size;
+	return size;
+}
 
-	if (session->attackType == AttackType::NONE)
-	{
-		//session->attackType = AttackType::ATTACK3;
-		session->moveDir = pkt->dir;
-		session->x = pkt->x;
-		session->y = pkt->y;
+int32 Packet::GetData(BYTE* dest, int32 size)
+{
+	if (_readPos + size > _writePos)
+		return -1;
 
-		protocol::S_ATTACK2 sendPkt{
-			session->id,
-				pkt->dir,
-				pkt->x,
-				pkt->y
-		};
+	::memcpy(dest, _buffer + _readPos, size);
+	_readPos += size;
+	_dataSize -= size;
 
-		Server::SendBroadcast(
-			session,
-			PacketType::S_ATTACK3,
-			reinterpret_cast<BYTE*>(&sendPkt),
-			sizeof(protocol::S_ATTACK3)
-		);
+	return size;
+}
 
-		//wcout << ::format(L"[Send] -> [{:^21}] {:21} # id={}, dir={}, x={}, y={}\n",
-		//	L"Broadcast",
-		//	L"S_ATTACK3",
-		//	sendPkt.id,
-		//	(int32)sendPkt.dir,
-		//	sendPkt.x,
-		//	sendPkt.y
-		//);
+int32 Packet::PutData(BYTE* src, int32 size)
+{
+	if (_writePos + size > _bufferSize)
+		return -1;
 
-		for (Session* target : Server::sessions)
-		{
-			if (target->socket == INVALID_SOCKET)
-			{
-				continue;
-			}
+	::memcpy(_buffer + _writePos, src, size);
+	_writePos += size;
+	_dataSize += size;
 
-			if (session == target)
-			{
-				continue;
-			}
+	return size;
+}
 
-			bool isAttack = false;
-			int32 damage = 15;
+Packet& Packet::operator=(Packet& src)
+{
+}
 
-			if (Server::IsAttackRange(session, target, Server::ATTACK3_RANGE_X, Server::ATTACK3_RANGE_Y))
-			{
-				target->hp -= damage;
-				protocol::S_DAMAGE pkt{
-					session->id,
-						target->id,
-						target->hp
-				};
+Packet& Packet::operator<<(BYTE value)
+{
+	PutData(&value, sizeof(BYTE));
 
-				Server::SendBroadcast(nullptr, PacketType::S_DAMAGE, reinterpret_cast<BYTE*>(&pkt), sizeof(protocol::S_DAMAGE));
-				//wcout << ::format(L"[Send] -> [{:^21}] {:21} # attackId={}, damageId={}, damageHp={}\n",
-				//	L"Broadcast",
-				//	L"S_DAMAGE",
-				//	pkt.attackId,
-				//	pkt.damageId,
-				//	(int32)pkt.damageHp
-				//);
-			}
-		}
-	}
+	return *this;
+}
 
-	return true;
+Packet& Packet::operator<<(char value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(char));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(int16 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(int16));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(uint16 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(uint16));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(int32 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(int32));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(uint32 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(uint32));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(int64 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(int64));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(uint64 value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(uint64));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(float value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(float));
+
+	return *this;
+}
+
+Packet& Packet::operator<<(double value)
+{
+	PutData(reinterpret_cast<BYTE*>(&value), sizeof(double));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(BYTE& value)
+{
+	GetData(&value, sizeof(BYTE));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(char& value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(BYTE));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(int16& value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(int16));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(uint16 & value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(uint16));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(int32 & value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(int32));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(uint32 & value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(uint32));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(int64 & value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(int64));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(uint64 & value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(uint64));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(float& value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(float));
+
+	return *this;
+}
+
+Packet& Packet::operator>>(double& value)
+{
+	GetData(reinterpret_cast<BYTE*>(&value), sizeof(double));
+
+	return *this;
 }
