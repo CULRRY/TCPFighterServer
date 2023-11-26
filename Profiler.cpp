@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Profiler.h"
+#include "DateTime.h"
 #include <fstream>
 #include <format>
 
@@ -26,11 +27,8 @@ void Profiler::Begin(const wstring_view name)
 	::QueryPerformanceCounter(&sample->startTime);
 }
 
-void Profiler::End(wstring_view name)
+void Profiler::End(wstring_view name, LARGE_INTEGER endTime)
 {
-	LARGE_INTEGER endTime;
-	::QueryPerformanceCounter(&endTime);
-
 	Sample* sample = findSample(name);
 
 	if (sample == nullptr)
@@ -43,7 +41,7 @@ void Profiler::End(wstring_view name)
 		__debugbreak();
 	}
 
-	const int64 processTime = endTime.QuadPart - sample->startTime.QuadPart;
+	const uint64 processTime = endTime.QuadPart - sample->startTime.QuadPart;
 
 	sample->callCount += 1;
 	sample->totalTime += processTime;
@@ -118,18 +116,11 @@ void Profiler::DataOut(wstring_view fileName)
 
 	fout << L"¦¦----------------------------------¦ª-------------------¦ª-------------------¦ª-------------------¦ª---------------¦¥\n";
 
-	const time_t timer = ::time(NULL);
-	tm localTime;
-	::localtime_s(&localTime, &timer);
+	DateTime localTime;
 
 	fout << ::format(
-		L"Updated at {}-{:0>2d}-{:0>2d} {:0>2d}:{:0>2d}:{:0>2d}\n",
-		localTime.tm_year + 1900,
-		localTime.tm_mon + 1,
-		localTime.tm_mday,
-		localTime.tm_hour,
-		localTime.tm_min,
-		localTime.tm_sec
+		L"Updated at {}\n",
+		localTime.to_string()
 	);
 
 	fout.close();
@@ -137,17 +128,10 @@ void Profiler::DataOut(wstring_view fileName)
 
 void Profiler::DataOut()
 {
-	const time_t timer = ::time(NULL);
-	tm localTime;
-	::localtime_s(&localTime, &timer);
+	DateTime localTime;
 
-	wstring fileName = ::format(L"profile/Profile_{}{:0>2d}{:0>2d}_{:0>2d}{:0>2d}{:0>2d}.txt",
-		localTime.tm_year + 1900,
-		localTime.tm_mon + 1,
-		localTime.tm_mday,
-		localTime.tm_hour,
-		localTime.tm_min,
-		localTime.tm_sec
+	wstring fileName = ::format(L"profile/Profile_{}.txt",
+		localTime.to_string(L"%Y%m%d_%H%M%S")
 	);
 
 	DataOut(fileName);

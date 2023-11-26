@@ -1,0 +1,1 @@
+C:\repo\TCPFighterServer\IDLCompiler\IDLCompiler.exe --path=C:\repo\TCPFighterServer\protocol.ptc --opath=C:\repo\TCPFighterServer\

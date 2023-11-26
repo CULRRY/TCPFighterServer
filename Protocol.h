@@ -1,54 +1,6 @@
 #pragma once
 #include "Packet.h"
 
-enum class Direction : BYTE
-{
-	LL,
-	LU,
-	UU,
-	RU,
-	RR,
-	RD,
-	DD,
-	LD,
-};
-
-inline Packet& operator<<(Packet& pkt, Direction dir)
-{
-	pkt.PutData(reinterpret_cast<BYTE*>(&dir), sizeof(Direction));
-	return pkt;
-}
-
-inline Packet& operator>>(Packet& pkt, Direction& dir)
-{
-	pkt.GetData(reinterpret_cast<BYTE*>(&dir), sizeof(Direction));
-	return pkt;
-}
-
-enum class PacketType : BYTE
-{
-	S_CREATE_MY_CHARACTER		= 0,
-	S_CREATE_OTHER_CHARACTER	= 1,
-	S_DELETE_CHARACTER			= 2,
-
-	C_MOVE_START				= 10,
-	S_MOVE_START				= 11,
-	C_MOVE_STOP					= 12,
-	S_MOVE_STOP					= 13,
-
-	C_ATTACK1					= 20,
-	S_ATTACK1					= 21,
-	C_ATTACK2					= 22,
-	S_ATTACK2					= 23,
-	C_ATTACK3					= 24,
-	S_ATTACK3					= 25,
-
-	S_DAMAGE					= 30,
-
-	C_SYNC						= 250,
-	S_SYNC						= 251,
-};
-
 namespace protocol
 {
 	//---------------------------------------------------------------

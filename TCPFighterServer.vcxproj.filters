@@ -7,6 +7,9 @@
     <Filter Include="Network">
       <UniqueIdentifier>{c55b90ae-c7f8-4348-baaf-276bef35823e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{88f0a626-bd14-47a3-83fd-5b4fb136ef48}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Server">
       <UniqueIdentifier>{1acf1f7e-91c3-4159-8c89-10b0a7d5f151}</UniqueIdentifier>
     </Filter>
@@ -30,13 +33,24 @@
     <ClCompile Include="Server.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="PacketHandle.cpp">
+    <ClCompile Include="PacketHandler.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="HandleRecvPacket.cpp">
       <Filter>Server</Filter>
     </ClCompile>
     <ClCompile Include="Profiler.cpp">
-      <Filter>Server</Filter>
+      <Filter>Utils</Filter>
     </ClCompile>
-    <ClCompile Include="Packet.cpp" />
+    <ClCompile Include="Packet.cpp">
+      <Filter>Network</Filter>
+    </ClCompile>
+    <ClCompile Include="Frame.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DateTime.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -60,12 +74,29 @@
     <ClInclude Include="Server.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="PacketHandle.h">
+    <ClInclude Include="HandleRecvPacket.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="PacketHandler.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="Direction.h">
       <Filter>Server</Filter>
     </ClInclude>
     <ClInclude Include="Profiler.h">
-      <Filter>Server</Filter>
+      <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Packet.h" />
+    <ClInclude Include="Packet.h">
+      <Filter>Network</Filter>
+    </ClInclude>
+    <ClInclude Include="Frame.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="DateTime.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="protocol.ptc" />
   </ItemGroup>
 </Project>

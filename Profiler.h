@@ -1,15 +1,34 @@
 #pragma once
 #ifdef PROFILE
 #define PROFILE_BEGIN(TagName)				Profiler::Begin(TagName)
-#define PROFILE_END(TagName)				Profiler::End(TagName)
+#define PROFILE_END(TagName)				do										\
+											{										\
+												LARGE_INTEGER endTime;				\
+												QueryPerformanceCounter(&endTime);	\
+												Profiler::End(TagName, endTime);	\
+											}										\
+											while(false)
+
 #define PROFILE_DATA_OUT_NAME(FileName)		Profiler::DataOut(FileName)
 #define PROFILE_DATA_OUT()					Profiler::DataOut()
 #define PROFILE_RESET()						Profiler::Reset()
+
+#define PROFILE_SAVE(key)					do											\
+											{											\
+												if (GetAsyncKeyState(key))				\
+												{										\
+													PROFILE_DATA_OUT();					\
+													wcout << L"PROFILE SAVED\n";		\
+												}										\
+											} while (false);
+											
 #else
 #define PROFILE_BEGIN(TagName)
 #define PROFILE_END(TagName)
-#define PROFILE_DATA_OUT(FileName)	
-#define PROFILE_RESET()	
+#define PROFILE_DATA_OUT_NAME(FileName)
+#define PROFILE_DATA_OUT()
+#define PROFILE_RESET()
+#define PROFILE_SAVE(key)
 #endif
 
 
@@ -24,18 +43,18 @@ class Profiler
 
 	struct Sample
 	{
-		bool			useFlag;
+		bool			useFlag{};
 		wstring_view	name;
-		LARGE_INTEGER	startTime;
-		uint64			totalTime;
-		uint64			min[2];
-		uint64			max[2];
-		uint64			callCount;
+		LARGE_INTEGER	startTime{};
+		uint64			totalTime{};
+		uint64			min[2]{};
+		uint64			max[2]{};
+		uint64			callCount{};
 	};
 
 public:
 	static void Begin(wstring_view name);
-	static void End(wstring_view name);
+	static void End(wstring_view name, LARGE_INTEGER endTime);
 	static void DataOut(wstring_view fileName);
 	static void DataOut();
 	static void Reset();

@@ -1,37 +1,35 @@
 #include "stdafx.h"
 #include "Server.h"
 #include <conio.h>
+
+#include "DateTime.h"
+#include "Frame.h"
+
+void test()
+{
+	int a = 1;
+}
+
 int main()
 {
 	Server::Init();
 
-	DWORD startTime = timeGetTime();
-	DWORD idealTime = startTime;
-	DWORD overTime = 0;
+	Frame::Init(20);
 
 	while (true)
-	{
-		if (GetAsyncKeyState(VK_RSHIFT))
-		{
-			PROFILE_DATA_OUT();
-			wcout << L"PROFILE SAVED\n";
-		}
+	{ 
+		PROFILE_SAVE(VK_SHIFT);
 
+		PROFILE_BEGIN(L"Network");
 		Server::Network();
+		PROFILE_END(L"Network");
 
+		PROFILE_BEGIN(L"Logic");
 		Server::Update();
+		PROFILE_END(L"Logic");
 
-		Sleep(20 - overTime);
-		idealTime += 20;
-		overTime = timeGetTime() - idealTime;
-
-		if (overTime <= 0)
-			overTime = 0;
-		else if (overTime >= 20)
-			overTime = 20;
+		Frame::Sleep();
 	}
-
-
 
 	return 0;
 }

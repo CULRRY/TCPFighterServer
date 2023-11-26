@@ -4,7 +4,6 @@
 #include "RingBuffer.h"
 
 class Packet;
-enum class PacketType : BYTE;
 enum class Direction : BYTE;
 
 enum class AttackType : BYTE
@@ -63,7 +62,7 @@ public:
 	static void SendBroadcast(Session* exceptSession, Packet& pkt);
 	static void Disconnect(Session* session);
 	static bool IsAttackRange(Session* session, Session* target, int32 rangeX, int32 rangeY);
-
+	static bool IsAlowableRange(Session* session, int32 x, int32 y);
 
 	inline static list<Session*>	sessions;
 	inline static SOCKET			listenSocket = INVALID_SOCKET                                                                                                                                                                                                                                                                                                                                                                                                                                                       ;

@@ -19,10 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="DateTime.cpp" />
+    <ClCompile Include="Frame.cpp" />
+    <ClCompile Include="HandleRecvPacket.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="NetworkAddress.cpp" />
     <ClCompile Include="Packet.cpp" />
-    <ClCompile Include="PacketHandle.cpp" />
+    <ClCompile Include="PacketHandler.cpp" />
     <ClCompile Include="Profiler.cpp" />
     <ClCompile Include="RingBuffer.cpp" />
     <ClCompile Include="Server.cpp" />
@@ -35,9 +38,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DateTime.h" />
+    <ClInclude Include="Direction.h" />
+    <ClInclude Include="Frame.h" />
+    <ClInclude Include="HandleRecvPacket.h" />
     <ClInclude Include="NetworkAddress.h" />
     <ClInclude Include="Packet.h" />
-    <ClInclude Include="PacketHandle.h" />
+    <ClInclude Include="PacketHandler.h" />
     <ClInclude Include="Profiler.h" />
     <ClInclude Include="Protocol.h" />
     <ClInclude Include="RingBuffer.h" />
@@ -45,6 +52,9 @@
     <ClInclude Include="SocketUtil.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="protocol.ptc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
@@ -183,6 +193,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PreBuildEvent>
+      <Command>CALL $(SolutionDir)IDLCompiler\idl.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

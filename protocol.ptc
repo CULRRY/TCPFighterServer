@@ -1,0 +1,107 @@
+type enum class Direction : BYTE -> Direction.h
+
+
+protocol S_CREATE_MY_CHARACTER = 0
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+	int8		hp;
+};
+
+protocol S_CREATE_OTHER_CHARACTER = 1
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+	int8		hp;
+};
+
+protocol S_DELETE_CHARACTER = 2
+{
+	int32 id;
+};
+
+protocol C_MOVE_START = 10
+{
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_MOVE_START = 11
+{
+	int32 id;
+	Direction dir;
+	int16 x;
+	int16 y;
+};
+
+protocol C_MOVE_STOP = 12
+{
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_MOVE_STOP = 13
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol C_ATTACK1 = 20
+{
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_ATTACK1 = 21
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol C_ATTACK2 = 22
+{
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_ATTACK2 = 23
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol C_ATTACK3 = 24
+{
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_ATTACK3 = 25
+{
+	int32		id;
+	Direction	dir;
+	int16		x;
+	int16		y;
+};
+
+protocol S_DAMAGE = 30
+{
+	int32	attackId;
+	int32	damageId;
+	int8	damageHp;
+};

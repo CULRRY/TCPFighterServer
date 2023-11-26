@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "Server.h"
 
-#include "PacketHandle.h"
+#include "Direction.h"
+#include "PacketHandler.h"
 #include "Protocol.h"
 #include "SocketUtil.h"
 
@@ -11,7 +12,7 @@ int16 dy[] = {0, -2, -2, -2, 0, 2, 2, 2};
 void Server::Init()
 {
 	SocketUtil::Init();
-	srand(time(nullptr));
+	srand(static_cast<unsigned>(time(nullptr)));
 
 	listenSocket = SocketUtil::Create();
 
@@ -197,7 +198,7 @@ bool Server::OnAccept()
 	//};
 	{
 		Packet pkt;
-		Make_S_CREATE_MY_CHARACTER(
+		PacketHandler::Make_S_CREATE_MY_CHARACTER(
 			pkt,
 			newSession->id,
 			newSession->attackDir,
@@ -230,7 +231,7 @@ bool Server::OnAccept()
 
 	{
 		Packet pkt;
-		Make_S_CREATE_OTHER_CHARACTER(
+		PacketHandler::Make_S_CREATE_OTHER_CHARACTER(
 			pkt,
 			newSession->id,
 			newSession->attackDir,
@@ -287,7 +288,7 @@ bool Server::OnAccept()
 		//};
 
 		Packet pktCreateOtherCharacter;
-		Make_S_CREATE_OTHER_CHARACTER(
+		PacketHandler::Make_S_CREATE_OTHER_CHARACTER(
 			pktCreateOtherCharacter,
 			session->id,
 			session->attackDir,
@@ -348,94 +349,10 @@ void Server::OnRecv(Session* session)
 
 	while (true)
 	{
-		if (session->recvBuffer.GetUseSize() < sizeof(PacketHeader))
+		if (PacketHandler::HandlePacket(session) == false)
 		{
 			return;
 		}
-
-		PacketHeader header;
-		session->recvBuffer.Peek(reinterpret_cast<BYTE*>(&header), sizeof(PacketHeader));
-
-		if (header.code != 0x89)
-		{
-			Disconnect(session);
-		}
-
-		if (session->recvBuffer.GetUseSize() < header.size + sizeof(PacketHeader))
-		{
-			return;
-		}
-
-		session->recvBuffer.MoveFront(sizeof(PacketHeader));
-
-		Packet pkt(header.size);
-		session->recvBuffer.Dequeue(pkt.GetBufferPtr(), header.size);
-		pkt.MoveWritePos(header.size);
-
-		switch (header.type)
-		{
-		case PacketType::C_MOVE_START:
-		{
-			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			//	L"C_MOVE_START",
-			//	session->id,
-			//	(int32)pkt.dir,
-			//	pkt.x,
-			//	pkt.y);
-			Handle_C_MOVE_START(session, pkt);
-			break;
-		}
-		case PacketType::C_MOVE_STOP:
-		{
-
-			Handle_C_MOVE_STOP(session, pkt);
-			break;
-		}
-
-		case PacketType::C_ATTACK1:
-		{
-			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			//	L"C_ATTACK1",
-			//	session->id,
-			//	(int32)pkt.dir,
-			//	pkt.x,
-			//	pkt.y);
-			Handle_C_ATTACK1(session, pkt);
-			break;
-		}
-
-		case PacketType::C_ATTACK2:
-		{
-			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			//	L"C_ATTACK2",
-			//	session->id,
-			//	(int32)pkt.dir,
-			//	pkt.x,
-			//	pkt.y);
-			Handle_C_ATTACK2(session, pkt);
-			break;
-		}
-
-		case PacketType::C_ATTACK3:
-		{
-			//wcout << ::format(L"[Recv] <- [{:^21}] {:21} id={} # dir={}, x={}, y={}\n",
-			//	::format(L"{}:{}", session->netInfo.GetIpAddress(), session->netInfo.GetPort()),
-			//	L"C_ATTACK3",
-			//	session->id,
-			//	(int32)pkt.dir,
-			//	pkt.x,
-			//	pkt.y);
-			Handle_C_ATTACK3(session, pkt);
-			break;
-		}
-
-		default:;
-		}
-
-		//cout << "Recv " << (int32)header.size << " Type: " << (int)header.type << endl;
 	}
 }
 
@@ -531,7 +448,7 @@ void Server::Disconnect(Session* session)
 	session->socket = INVALID_SOCKET;
 
 	Packet pkt;
-	Make_S_DELETE_CHARACTER(pkt, session->id);
+	PacketHandler::Make_S_DELETE_CHARACTER(pkt, session->id);
 	SendBroadcast(session, pkt);
 }
 
@@ -555,6 +472,21 @@ bool Server::IsAttackRange(Session* session, Session* target, int32 rangeX, int3
 		{
 			return false;
 		}
+	}
+
+	return true;
+}
+
+bool Server::IsAlowableRange(Session* session, int32 x, int32 y)
+{
+	if (abs(session->x - x) > 50)
+	{
+		return false;
+	}
+
+	if (abs(session->y - y) > 50)
+	{
+		return false;
 	}
 
 	return true;

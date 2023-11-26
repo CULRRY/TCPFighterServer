@@ -1,6 +1,10 @@
 #pragma once
+enum class PacketType : BYTE;
+class RingBuffer;
+
 class Packet
 {
+	friend RingBuffer;
 	enum
 	{
 		BUFFER_DEFAULT_SIZE = 1400,
@@ -14,7 +18,7 @@ public:
 	void	Clear();
 
 	int32	GetBufferSize() { return _bufferSize; };
-	int32	GetDataSize() { return _dataSize; };
+	int32	GetDataSize() { return _writePos - _readPos; };
 
 	BYTE*	GetBufferPtr() { return _buffer; }
 
@@ -23,6 +27,8 @@ public:
 
 	int32	GetData(BYTE* dest, int32 size);
 	int32	PutData(BYTE* src, int32 size);
+
+	void	MakeHeader(PacketType type);
 
 	// Operator Overloading
 	Packet& operator=(Packet& src);
@@ -52,8 +58,8 @@ public:
 protected:
 	BYTE* _buffer;
 	int32 _bufferSize;
-	int32 _dataSize;
 	int32 _readPos;
 	int32 _writePos;
+	bool  _hasHeader;
 };
 

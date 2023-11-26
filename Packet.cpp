@@ -1,20 +1,25 @@
 #include "stdafx.h"
 #include "Packet.h"
+#include "PacketHandler.h"
 
 Packet::Packet()
-	: _bufferSize(BUFFER_DEFAULT_SIZE), _dataSize(0), _readPos(0), _writePos(0)
+	: _bufferSize(BUFFER_DEFAULT_SIZE), _readPos(0), _writePos(0), _hasHeader(false)
 {
-	_buffer = new BYTE[_bufferSize];
+	_buffer = new BYTE[_bufferSize + sizeof(PacketHeader)];
+	_buffer += sizeof(PacketHeader);
 }
 
 Packet::Packet(int32 bufferSize)
-	:_bufferSize(bufferSize), _dataSize(0), _readPos(0), _writePos(0)
+	:_bufferSize(bufferSize), _readPos(0), _writePos(0), _hasHeader(false)
 {
-	_buffer = new BYTE[_bufferSize];
+	_buffer = new BYTE[_bufferSize + sizeof(PacketHeader)];
+	_buffer += sizeof(PacketHeader);
 }
 
 Packet::~Packet()
 {
+	if (_hasHeader == false)
+		_buffer -= sizeof(PacketHeader);
 	delete[] _buffer;
 }
 
@@ -27,14 +32,12 @@ void Packet::Clear()
 int32 Packet::MoveWritePos(int32 size)
 {
 	_writePos += size;
-	_dataSize += size;
 	return size;
 }
 
 int32 Packet::MoveReadPos(int32 size)
 {
 	_readPos += size;
-	_dataSize -= size;
 	return size;
 }
 
@@ -45,7 +48,6 @@ int32 Packet::GetData(BYTE* dest, int32 size)
 
 	::memcpy(dest, _buffer + _readPos, size);
 	_readPos += size;
-	_dataSize -= size;
 
 	return size;
 }
@@ -57,9 +59,22 @@ int32 Packet::PutData(BYTE* src, int32 size)
 
 	::memcpy(_buffer + _writePos, src, size);
 	_writePos += size;
-	_dataSize += size;
 
 	return size;
+}
+
+void Packet::MakeHeader(PacketType type)
+{
+	if (_hasHeader == true)
+		return;
+
+	_hasHeader = true;
+	_buffer -= sizeof(PacketHeader);
+	_writePos += sizeof(PacketHeader);
+	PacketHeader* header = reinterpret_cast<PacketHeader*>(_buffer);
+	header->code = 0x89;
+	header->type = type;
+	header->size = static_cast<BYTE>(GetDataSize() - sizeof(PacketHeader));
 }
 
 Packet& Packet::operator=(Packet& src)
